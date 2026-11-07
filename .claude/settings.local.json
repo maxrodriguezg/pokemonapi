@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//private/tmp/pkrepro/**)",
+      "Bash(sed -i '' '9d' http.mjs)",
+      "Bash(node http.mjs)"
+    ]
+  }
+}
