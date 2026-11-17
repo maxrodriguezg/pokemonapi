@@ -1,26 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
-import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Usuario } from './entities/usuario.entity.js';
+import { Rol } from './enums/rol/rol.enum.js';
+
+
+export interface CreateUsuarioData {
+  username: string;
+  password: string;
+  rol?: Rol;
+}
 
 @Injectable()
 export class UsuariosService {
-  create(createUsuarioDto: CreateUsuarioDto) {
-    return 'This action adds a new usuario';
+
+  constructor(
+    @InjectRepository(Usuario)
+    private readonly usuariosRepository: Repository<Usuario>,
+  ) {}
+
+  findByUsername(username: string): Promise<Usuario | null> {
+    return this.usuariosRepository
+      .createQueryBuilder('usuario')
+      .addSelect('usuario.password')
+      .where('usuario.username = :username', { username })
+      .getOne();
   }
 
-  findAll() {
-    return `This action returns all usuarios`;
+  findById(id: number): Promise<Usuario | null> {
+    return this.usuariosRepository.findOneBy({ id });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} usuario`;
-  }
+  create(data: CreateUsuarioData): Promise<Usuario> {
+    const usuario = this.usuariosRepository.create({
+      username: data.username,
+      password: data.password,
+      rol: data.rol ?? Rol.ENTRENADOR,
+    });
 
-  update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    return `This action updates a #${id} usuario`;
-  }
+    return this.usuariosRepository.save(usuario);
 
-  remove(id: number) {
-    return `This action removes a #${id} usuario`;
   }
 }

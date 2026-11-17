@@ -1,26 +1,68 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto.js';
-import { UpdateAuthDto } from './dto/update-auth.dto.js';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { JwtService } from '@nestjs/jwt';
+import { compare, hash } from 'bcryptjs';
+import { UsuariosService } from '../usuarios/usuarios.service.js';
+import { LoginDto } from './dto/login.dto.js';
+import { RegisterDto } from './dto/register.dto.js';
+import { JwtPayload } from '../interfaces/jwt-payload.interface.js';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly usuariosService: UsuariosService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async register(registerDto: RegisterDto) {
+    const existente = await this.usuariosService.findByUsername(
+      registerDto.username,
+    );
+
+    if (existente) {
+      throw new ConflictException('El username ya está en uso');
+    }
+
+    const password = await hash(registerDto.password, 10);
+    const usuario = await this.usuariosService.create({
+      username: registerDto.username,
+      password,
+      rol: registerDto.rol,
+    });
+
+    return {
+      id: usuario.id,
+      username: usuario.username,
+      rol: usuario.rol,
+    };
   }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+  async login(loginDto: LoginDto) {
+    const usuario = await this.usuariosService.findByUsername(
+      loginDto.username,
+    );
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+    if (!usuario) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+    const passwordValida = await compare(loginDto.password, usuario.password);
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+    if (!passwordValida) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    const payload: JwtPayload = {
+      sub: usuario.id,
+      username: usuario.username,
+      rol: usuario.rol,
+    };
+
+    return { access_token: await this.jwtService.signAsync(payload) };
   }
 }
+
