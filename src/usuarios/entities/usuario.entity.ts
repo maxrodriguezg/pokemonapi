@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Pokemon } from '../../pokemon/entities/pokemon.entity.js';
 import { Rol } from '../enums/rol/rol.enum.js';
 
 @Entity('usuarios')
@@ -14,4 +15,9 @@ export class Usuario {
 
   @Column({ type: 'enum', enum: Rol, default: Rol.ENTRENADOR })
   rol: Rol;
+
+  @ManyToMany(() => Pokemon, (pokemon) => pokemon.propietarios, {
+    onDelete: 'RESTRICT',
+  })
+  pokemons: Pokemon[];
 }

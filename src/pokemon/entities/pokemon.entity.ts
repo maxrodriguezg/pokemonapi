@@ -1,12 +1,12 @@
 import {
-  // Inicio de las importaciones necesarias desde la librería de TypeORM
-  Column, // Decorador para definir columnas regulares en la tabla de la base de datos
-  Entity, // Decorador para indicar que esta clase es una entidad (tabla) de base de datos
-  JoinTable, // Decorador obligatorio en un lado de la relación Many-to-Many para crear la tabla intermedia
+  Column,
+  Entity,
+  JoinTable,
   ManyToMany, // Decorador para definir una relación de muchos a muchos entre entidades
   PrimaryGeneratedColumn, // Decorador para definir la clave primaria autoincremental de la tabla
 } from 'typeorm'; // Cierra la sentencia de importación desde 'typeorm'
 import { Tipo } from './tipos.entity.js'; // Importa la entidad 'Tipo' relacionada desde su archivo local
+import { Usuario } from '../../usuarios/entities/usuario.entity.js';
 
 @Entity('pokemon') // Indica que esta clase representa una tabla en la base de datos llamada 'pokemon'
 export class Pokemon {
@@ -21,12 +21,18 @@ export class Pokemon {
   descripcion: string; // Declara la propiedad 'descripcion' de tipo string para guardar una breve descripción
 
   @ManyToMany(() => Tipo, (tipo) => tipo.pokemons, {
-    // Establece una relación de muchos a muchos con la entidad 'Tipo', apuntando a su propiedad inversa 'tipo.pokemons'
-    // Sin cascade: los tipos deben existir antes; al crear un Pokémon solo se enlazan por id
-  }) // Cierra los parámetros de configuración del decorador @ManyToMany
+  })
   @JoinTable({
-    // Define la tabla intermedia o pivote que une ambas entidades en la base de datos
-    name: 'pokemon_tipos', // Opcional: asigna un nombre personalizado ('pokemon_tipos') a dicha tabla intermedia en lugar de uno automático
-  }) // Cierra los parámetros de configuración del decorador @JoinTable
+    name: 'pokemon_tipos',
+  })
   types: Tipo[]; // Declara la propiedad 'types' como un arreglo de objetos de tipo 'Tipo', representando los tipos del Pokémon
+
+  @ManyToMany(() => Usuario, (usuario) => usuario.pokemons, {
+    onDelete: 'CASCADE', })
+  @JoinTable({
+    name: 'pokemon_propietarios',
+  })
+  propietarios: Usuario[];
 } // Cierra la definición de la clase Pokemon
+
+

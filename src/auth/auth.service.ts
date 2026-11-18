@@ -3,13 +3,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import { UsuariosService } from '../usuarios/usuarios.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
-import { JwtPayload } from '../interfaces/jwt-payload.interface.js';
+import type { JwtPayload } from '../interfaces/jwt-payload.interface.js';
 
 @Injectable()
 export class AuthService {
@@ -65,4 +64,3 @@ export class AuthService {
     return { access_token: await this.jwtService.signAsync(payload) };
   }
 }
-
